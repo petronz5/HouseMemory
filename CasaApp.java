@@ -1,9 +1,8 @@
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,23 +13,42 @@ public class CasaApp {
     private Map<String, JTextArea> stanzeAppunti;
 
     public CasaApp() {
+        // Usa il look and feel Nimbus per un'interfaccia più moderna
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
+
         frame = new JFrame("Appunti della Casa");
-        frame.setLayout(new GridLayout(3, 4));
+        frame.setLayout(new BorderLayout());
         stanzeAppunti = new HashMap<>();
 
-        for (int i = 1; i <= 12; i++) {
-            String stanzaNome = "Stanza " + i;
+        // Pannello centrale con un layout più flessibile
+        JPanel pannelloCentrale = new JPanel(new GridLayout(3, 4, 10, 10));
+        pannelloCentrale.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Stanze della casa con una disposizione più creativa
+        String[] nomiStanze = {"Soggiorno", "Cucina", "Camera da Letto", "Studio", "Bagno", "Armadio Magico",
+                "Giardino Segreto", "Sala dei Giochi", "Cantina Misteriosa", "Biblioteca Incantata", "Sala del Tesoro", "Observatory"};
+
+        for (String stanzaNome : nomiStanze) {
             JTextArea appuntiArea = new JTextArea();
+            appuntiArea.setLineWrap(true);
+            appuntiArea.setWrapStyleWord(true);
             stanzeAppunti.put(stanzaNome, appuntiArea);
 
             JPanel stanzaPanel = new JPanel(new BorderLayout());
             stanzaPanel.setBorder(BorderFactory.createTitledBorder(stanzaNome));
             stanzaPanel.add(new JScrollPane(appuntiArea), BorderLayout.CENTER);
 
-            frame.add(stanzaPanel);
+            pannelloCentrale.add(stanzaPanel);
         }
 
-        //Aggiungi un menu File con opzioni di salvataggio e caricamento
+        // Aggiungi il pannello centrale al frame
+        frame.add(pannelloCentrale, BorderLayout.CENTER);
+
+        // Barra del menu con opzioni di File
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
 
@@ -56,6 +74,8 @@ public class CasaApp {
         menuBar.add(fileMenu);
         frame.setJMenuBar(menuBar);
 
+        // Pannello inferiore con bottoni aggiuntivi
+        JPanel pannelloInferiore = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
 
         JButton salvaButton = new JButton("SALVA");
         salvaButton.addActionListener(new ActionListener() {
@@ -65,10 +85,6 @@ public class CasaApp {
             }
         });
 
-        frame.add(salvaButton);
-
-        caricaAppunti(); // Carica gli appunti salvati all'avvio dell'applicazione
-
         JButton modificaButton = new JButton("Modifica appunti");
         modificaButton.addActionListener(new ActionListener() {
             @Override
@@ -76,8 +92,6 @@ public class CasaApp {
                 apriFinestraModifica();
             }
         });
-
-        frame.add(modificaButton);
 
         JButton coloreButton = new JButton("Cambia colore testo");
         coloreButton.addActionListener(new ActionListener() {
@@ -87,50 +101,29 @@ public class CasaApp {
             }
         });
 
-        frame.add(coloreButton);
-
-        frame.addKeyListener(new KeyListener() {
+        JButton ricercaButton = new JButton("Cerca");
+        ricercaButton.addActionListener(new ActionListener() {
             @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if(e.isControlDown()){
-                    switch (e.getKeyCode()){
-                        case KeyEvent.VK_UP:
-                            spostaStanza("SU");
-                            break;
-                        case KeyEvent.VK_DOWN:
-                            spostaStanza("GIU");
-                            break;
-                        case KeyEvent.VK_RIGHT:
-                            spostaStanza("DESTRA");
-                            break;
-                        case KeyEvent.VK_LEFT:
-                            spostaStanza("SINISTRA");
-                            break;
-                    }
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-
+            public void actionPerformed(ActionEvent e) {
+                apriFinestraRicerca();
             }
         });
 
-        //Assicurati che il frame sia focalizzato per ricevere gli eventi della finest
-        frame.setFocusable(true);
-        frame.requestFocus();
+        pannelloInferiore.add(salvaButton);
+        pannelloInferiore.add(modificaButton);
+        pannelloInferiore.add(coloreButton);
+        pannelloInferiore.add(ricercaButton);
 
-        frame.setSize(1000, 900);
+        // Aggiungi il pannello inferiore al frame
+        frame.add(pannelloInferiore, BorderLayout.SOUTH);
+
+        // Configurazioni generali del frame
+        configurazioneFrame();
+
+        // Imposta le dimensioni e la chiusura del frame
+        frame.setSize(1000, 800);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
-
-
-
     }
 
     private void salvaAppunti() {
@@ -169,12 +162,12 @@ public class CasaApp {
         }
     }
 
-    private void apriFinestraModifica(){
-        JDialog dialog = new JDialog(frame , "Modifica appunti" , true);
+    private void apriFinestraModifica() {
+        JDialog dialog = new JDialog(frame, "Modifica appunti", true);
         dialog.setLayout(new BorderLayout());
 
         JTextArea appuntiArea = new JTextArea();
-        appuntiArea.setText(stanzeAppunti.get("Stanza 1").getText()); // Esempio: Prendiamo gli appunti dalla prima stanza
+        appuntiArea.setText(stanzeAppunti.get("Soggiorno").getText()); // Esempio: Prendiamo gli appunti dal soggiorno
         dialog.add(new JScrollPane(appuntiArea), BorderLayout.CENTER);
 
         JButton confermaButton = new JButton("Conferma");
@@ -182,7 +175,7 @@ public class CasaApp {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Aggiorna gli appunti nella stanza
-                stanzeAppunti.get("Stanza 1").setText(appuntiArea.getText());
+                stanzeAppunti.get("Soggiorno").setText(appuntiArea.getText());
                 dialog.dispose();
             }
         });
@@ -194,18 +187,85 @@ public class CasaApp {
         dialog.setVisible(true);
     }
 
-    private void cambiaColoreTesto(){
-        Color coloreScelto = JColorChooser.showDialog(frame , "Seleziona colore testo" , Color.black);
+    private void cambiaColoreTesto() {
+        Color coloreScelto = JColorChooser.showDialog(frame, "Seleziona colore testo", Color.black);
 
-        if(coloreScelto != null){
-            for(JTextArea appuntiArea : stanzeAppunti.values()){
+        if (coloreScelto != null) {
+            for (JTextArea appuntiArea : stanzeAppunti.values()) {
                 appuntiArea.setForeground(coloreScelto);
             }
         }
     }
 
-    private void spostaStanza(String direzione){
-        System.out.println("Spostati "+direzione);
+    private void apriFinestraRicerca() {
+        JDialog dialog = new JDialog(frame, "Ricerca", true);
+        dialog.setLayout(new BorderLayout());
+
+        JTextField ricercaField = new JTextField();
+        JButton cercaButton = new JButton("Cerca");
+
+        cercaButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                eseguiRicerca(ricercaField.getText());
+            }
+        });
+
+        JPanel ricercaPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        ricercaPanel.add(ricercaField);
+        ricercaPanel.add(cercaButton);
+
+        dialog.add(ricercaPanel, BorderLayout.NORTH);
+
+        JTextArea risultatiArea = new JTextArea();
+        risultatiArea.setEditable(false);
+
+        dialog.add(new JScrollPane(risultatiArea), BorderLayout.CENTER);
+
+        JButton chiudiButton = new JButton("Chiudi");
+        chiudiButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dialog.dispose();
+            }
+        });
+
+        dialog.add(chiudiButton, BorderLayout.SOUTH);
+
+        dialog.setSize(400, 300);
+        dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        dialog.setVisible(true);
+    }
+
+    private void eseguiRicerca(String termineRicerca) {
+        StringBuilder risultati = new StringBuilder();
+
+        for (Map.Entry<String, JTextArea> entry : stanzeAppunti.entrySet()) {
+            String stanzaNome = entry.getKey();
+            JTextArea appuntiArea = entry.getValue();
+            String appunti = appuntiArea.getText();
+
+            if (appunti.contains(termineRicerca)) {
+                risultati.append("Trovato in ").append(stanzaNome).append("\n");
+                appuntiArea.setSelectionStart(appunti.indexOf(termineRicerca));
+                appuntiArea.setSelectionEnd(appunti.indexOf(termineRicerca) + termineRicerca.length());
+            }
+        }
+
+        if (risultati.length() == 0) {
+            risultati.append("Nessun risultato trovato.");
+        }
+
+        JOptionPane.showMessageDialog(frame, risultati.toString());
+    }
+
+    // Configurazione del frame con un aspetto più moderno
+    private void configurazioneFrame() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
